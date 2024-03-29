@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BX Dungeon Delver</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    #dungeonRoom {
+        margin: 20px auto;
+        width: 80%;
+        max-width: 600px;
+        border: 1px solid #ccc;
+        padding: 20px;
+    }
+    h2 {
+        margin-top: 0;
+    }
+    .roomLog {
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+<div id="dungeonRoom">
+    <h2>You are in:</h2>
+    <p>Door Location: <span id="doorLocation"></span></p>
+    <p>Curve: <span id="curve"></span></p>
+    <p>Slope: <span id="slope"></span></p>
+    <p>Width: <span id="width"></span></p>
+    <p>Chamber Size: <span id="chamberSize"></span></p>
+    <p>Ceiling Height: <span id="ceilingHeight"></span></p>
+    <p>Door Status: <span id="doorStatus"></span></p>
+    <p>Door Material: <span id="doorMaterial"></span></p>
+    <p>Room Content: <span id="roomContent"></span></p>
+    <p>Treasure: <span id="treasure"></span></p>
+    <p>Treasure Trap: <span id="treasureTrap"></span></p>
+    <button id="generateRoomBtn">Generate Room</button>
+    <button id="clearLogBtn">Clear Log</button>
+</div>
+
+<div class="roomLog" id="roomLog">
+    <h2>Log:</h2>
+    <ol id="logList"></ol>
+</div>
+
+<script>
+    let logCounter = 0; // Counter for log entries
+
+    function rollDice(sides) {
+        return Math.floor(Math.random() * sides) + 1;
+    }
+
+    function generateDungeonRoom() {
+        const doorLocationRoll = rollDice(6) + rollDice(6);
+        let doorLocation;
+        let curve = '';
+        let slope = '';
+        let width = '';
+        let doorStatuses = []; // Store door statuses for multiple doors
+
+        switch(doorLocationRoll) {
+            case 2:
+                doorLocation = "Ascent";
+                doorStatuses.push(generateDoorStatus());
+                break;
+            case 3:
+                doorLocation = "Descent";
+                doorStatuses.push(generateDoorStatus());
+                break;
+            case 4:
+                doorLocation = "Dead-end";
+                doorStatuses.push(generateDoorStatus());
+                break;
+            case 5:
+            case 6:
+                doorLocation = "Front, Right";
+                doorStatuses.push(generateDoorStatus());
+                doorStatuses.push(generateDoorStatus());
+                break;
+            case 7:
+                doorLocation = "Front, Left";
+                doorStatuses.push(generateDoorStatus());
+                doorStatuses.push(generateDoorStatus());
+                break;
+            case 8:
+            case 9:
+                doorLocation = "Front (Corridor)";
+                curve = generateCurve();
+                slope = generateSlope();
+                width = generateWidth();
+                doorStatuses.push(generateDoorStatus());
+                break;
+            case 10:
+            case 11:
+                doorLocation = "Front, Left, Right";
+                doorStatuses.push(generateDoorStatus());
+                doorStatuses.push(generateDoorStatus());
+                doorStatuses.push(generateDoorStatus());
+                break;
+            case 12:
+                doorLocation = "Objective/Special";
+                doorStatuses.push(generateDoorStatus());
+                break;
+            default:
+                doorLocation = "Error";
+                doorStatuses.push(generateDoorStatus());
+        }
+
+        const chamberSize = generateChamberSize();
+        const ceilingHeight = generateCeilingHeight();
+        const doorMaterial = generateDoorMaterial();
+        const roomContent = generateRoomContent();
+        const treasure = generateTreasure(roomContent);
+        const treasureTrap = generateTreasureTrap(roomContent, treasure);
+
+        document.getElementById('doorLocation').textContent = doorLocation;
+        document.getElementById('curve').textContent = curve;
+        document.getElementById('slope').textContent = slope;
+        document.getElementById('width').textContent = width;
+        document.getElementById('chamberSize').textContent = chamberSize;
+        document.getElementById('ceilingHeight').textContent = ceilingHeight;
+        document.getElementById('doorStatus').textContent = doorStatuses.join(', '); // Display door statuses separated by comma
+        document.getElementById('doorMaterial').textContent = doorMaterial;
+        document.getElementById('roomContent').textContent = roomContent;
+        document.getElementById('treasure').textContent = treasure;
+        document.getElementById('treasureTrap').textContent = treasureTrap;
+
+        // Add the generated room to the room log
+        addToRoomLog(doorLocation, curve, slope, width, chamberSize, ceilingHeight, doorStatuses.join(', '), doorMaterial, roomContent, treasure, treasureTrap);
+    }
+
+    function addToRoomLog(doorLocation, curve, slope, width, chamberSize, ceilingHeight, doorStatus, doorMaterial, roomContent, treasure, treasureTrap) {
+        const roomLog = document.getElementById('logList');
+        const logEntry = document.createElement('li');
+        logCounter++; // Increment log counter
+        logEntry.textContent = `${logCounter}. ${doorLocation} - Curve: ${curve}, Slope: ${slope}, Width: ${width}, Size: ${chamberSize}, Height: ${ceilingHeight}, Doors: ${doorStatus}, Material: ${doorMaterial}, Content: ${roomContent}, Treasure: ${treasure}, Trap: ${treasureTrap}`;
+
+        // Insert the log entry at the beginning of the room log
+        roomLog.insertBefore(logEntry, roomLog.firstChild);
+    }
+
+    function generateDoorStatus() {
+        const doorStatusRoll = rollDice(8);
+        switch(doorStatusRoll) {
+            case 1:
+                return "Open";
+            case 2:
+                return "Closed";
+            case 3:
+                return "One-way";
+            case 4:
+                return "Stuck";
+            case 5:
+                return "Locked";
+            case 6:
+                return "Blocked";
+            case 7:
+                return "Sealed";
+            case 8:
+                return "Secret";
+            default:
+                return "Error";
+        }
+    }
+
+    function generateChamberSize() {
+        const roomSizeRoll = rollDice(6) + rollDice(6);
+        switch(roomSizeRoll) {
+            case 2:
+                return "Tiny (20 ft²)";
+            case 3:
+            case 4:
+            case 5:
+                return "Small (40ft²)";
+            case 6:
+            case 7:
+            case 8:
+                return "Medium (60ft²)";
+            case 9:
+            case 10:
+                return "Large (80ft²)";
+            case 11:
+                return "Huge (100ft²)";
+            case 12:
+                return "Gargantuan (120ft²)";
+            default:
+                return "Error";
+        }
+    }
+
+    function generateCeilingHeight() {
+        const ceilingHeightRoll = rollDice(6) + rollDice(6);
+        switch(ceilingHeightRoll) {
+            case 2:
+                return "2' or less";
+            case 3:
+            case 4:
+                return "2-4'";
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+                return "5-7'";
+            case 9:
+            case 10:
+                return "8-12'";
+            case 11:
+                return "13-25'";
+            case 12:
+                return "25'+";
+            default:
+                return "Error";
+        }
+    }
+
+    function generateDoorMaterial() {
+        const doorMaterialRoll = rollDice(6);
+        switch(doorMaterialRoll) {
+            case 1:
+                return "Thin wood";
+            case 2:
+                return "Thick wood";
+            case 3:
+                return "Brick";
+            case 4:
+                return "Soft stone";
+            case 5:
+                return "Hard stone";
+            case 6:
+                return "Metal";
+            default:
+                return "Error";
+        }
+    }
+
+    function generateRoomContent() {
+        const roomContentRoll = rollDice(6);
+        switch(roomContentRoll) {
+            case 1:
+            case 2:
+                return "Monster";
+            case 3:
+                return "Trap";
+            case 4:
+                return "Special";
+            case 5:
+            case 6:
+                return "Empty";
+            default:
+                return "Error";
+        }
+    }
+
+    function generateTreasure(roomContent) {
+        if (roomContent === "Monster") {
+            const treasureRoll = rollDice(6);
+            if (treasureRoll <= 3) {
+                return "Available";
+            }
+        } else if (roomContent === "Trap") {
+            const treasureRoll = rollDice(6);
+            if (treasureRoll <= 2) {
+                return "Available";
+            }
+        } else if (roomContent === "Empty") {
+            const treasureRoll = rollDice(6);
+            if (treasureRoll === 1) {
+                return "Available";
+            }
+        }
+        return "None";
+    }
+
+    function generateTreasureTrap(roomContent, treasure) {
+        if (roomContent === "Empty" && treasure === "Available") {
+            const trapRoll = rollDice(6);
+            if (trapRoll === 1) {
+                return "Trapped";
+            } else {
+                return "Not Trapped";
+            }
+        }
+        return "N/A";
+    }
+
+    function generateCurve() {
+        const curveRoll = rollDice(6);
+        switch(curveRoll) {
+            case 1:
+                return "Left";
+            case 6:
+                return "Right";
+            default:
+                return "Straight";
+        }
+    }
+
+    function generateSlope() {
+        const slopeRoll = rollDice(6);
+        switch(slopeRoll) {
+            case 1:
+                return "Upward";
+            case 6:
+                return "Downward";
+            default:
+                return "Even";
+        }
+    }
+
+    function generateWidth() {
+        const widthRoll = rollDice(6);
+        switch(widthRoll) {
+            case 1:
+                return "Narrowing";
+            case 6:
+                return "Widening";
+            default:
+                return "Same";
+        }
+    }
+
+    function clearRoomLog() {
+        document.getElementById('logList').innerHTML = ''; // Clear the room log
+        logCounter = 0; // Reset log counter
+    }
+
+    // Event listener for the "Generate Room" button
+    document.getElementById('generateRoomBtn').addEventListener('click', function() {
+        generateDungeonRoom(); // Generate dungeon room
+    });
+
+    // Event listener for the "Clear Log" button
+    document.getElementById('clearLogBtn').addEventListener('click', function() {
+        clearRoomLog(); // Clear room log
+    });
+
+</script>
+</body>
+</html>
