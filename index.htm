@@ -26,17 +26,14 @@
 <body>
 <div id="dungeonRoom">
     <h2>You are in:</h2>
-    <p>Door Location: <span id="doorLocation"></span></p>
-    <p>Curve: <span id="curve"></span></p>
-    <p>Slope: <span id="slope"></span></p>
-    <p>Width: <span id="width"></span></p>
-    <p>Chamber Size: <span id="chamberSize"></span></p>
-    <p>Ceiling Height: <span id="ceilingHeight"></span></p>
-    <p>Door Status: <span id="doorStatus"></span></p>
-    <p>Door Material: <span id="doorMaterial"></span></p>
-    <p>Room Content: <span id="roomContent"></span></p>
-    <p>Treasure: <span id="treasure"></span></p>
-    <p>Treasure Trap: <span id="treasureTrap"></span></p>
+    <p><strong>Chamber Size:</strong> <span id="chamberSize"></span></p>
+    <p><strong>Ceiling Height:</strong> <span id="ceilingHeight"></span></p>
+    <p><strong>Room Content:</strong> <span id="roomContent"></span></p>
+    <p><strong>Door Location (Curve, Slope, Width):</strong> <span id="doorLocation"></span></p>
+    <p id="doorStatusLine" style="display: none;"><strong>Door Status:</strong> <span id="doorStatus"></span></p>
+    <p id="doorMaterialLine" style="display: none;"><strong>Door Material:</strong> <span id="doorMaterial"></span></p>
+    <p><strong>Treasure:</strong> <span id="treasure"></span></p>
+    <p><strong>Treasure Trap:</strong> <span id="treasureTrap"></span></p>
     <button id="generateRoomBtn">Generate Room</button>
     <button id="clearLogBtn">Clear Log</button>
 </div>
@@ -79,6 +76,7 @@
                 doorLocation = "Front, Right";
                 doorStatuses.push(generateDoorStatus());
                 doorStatuses.push(generateDoorStatus());
+                doorStatuses.push(generateDoorStatus());
                 break;
             case 7:
                 doorLocation = "Front, Left";
@@ -116,27 +114,34 @@
         const treasure = generateTreasure(roomContent);
         const treasureTrap = generateTreasureTrap(roomContent, treasure);
 
-        document.getElementById('doorLocation').textContent = doorLocation;
-        document.getElementById('curve').textContent = curve;
-        document.getElementById('slope').textContent = slope;
-        document.getElementById('width').textContent = width;
         document.getElementById('chamberSize').textContent = chamberSize;
         document.getElementById('ceilingHeight').textContent = ceilingHeight;
-        document.getElementById('doorStatus').textContent = doorStatuses.join(', '); // Display door statuses separated by comma
-        document.getElementById('doorMaterial').textContent = doorMaterial;
         document.getElementById('roomContent').textContent = roomContent;
+        document.getElementById('doorLocation').textContent = `${doorLocation} (${curve}, ${slope}, ${width})`;
+
+        // Display or hide door status and door material based on door location
+        if (doorLocation === "Dead-end") {
+            document.getElementById('doorStatusLine').style.display = 'none';
+            document.getElementById('doorMaterialLine').style.display = 'none';
+        } else {
+            document.getElementById('doorStatusLine').style.display = 'block';
+            document.getElementById('doorMaterialLine').style.display = 'block';
+            document.getElementById('doorStatus').textContent = doorStatuses.join(', '); // Display door statuses separated by comma
+            document.getElementById('doorMaterial').textContent = doorMaterial;
+        }
+
         document.getElementById('treasure').textContent = treasure;
         document.getElementById('treasureTrap').textContent = treasureTrap;
 
         // Add the generated room to the room log
-        addToRoomLog(doorLocation, curve, slope, width, chamberSize, ceilingHeight, doorStatuses.join(', '), doorMaterial, roomContent, treasure, treasureTrap);
+        addToRoomLog(chamberSize, ceilingHeight, roomContent, `${doorLocation} (${curve}, ${slope}, ${width})`, doorStatuses.join(', '), doorMaterial, treasure, treasureTrap);
     }
 
-    function addToRoomLog(doorLocation, curve, slope, width, chamberSize, ceilingHeight, doorStatus, doorMaterial, roomContent, treasure, treasureTrap) {
+    function addToRoomLog(chamberSize, ceilingHeight, roomContent, doorLocation, doorStatus, doorMaterial, treasure, treasureTrap) {
         const roomLog = document.getElementById('logList');
         const logEntry = document.createElement('li');
         logCounter++; // Increment log counter
-        logEntry.textContent = `${logCounter}. ${doorLocation} - Curve: ${curve}, Slope: ${slope}, Width: ${width}, Size: ${chamberSize}, Height: ${ceilingHeight}, Doors: ${doorStatus}, Material: ${doorMaterial}, Content: ${roomContent}, Treasure: ${treasure}, Trap: ${treasureTrap}`;
+        logEntry.textContent = `${logCounter}. Chamber Size: ${chamberSize}, Ceiling Height: ${ceilingHeight}, Room Content: ${roomContent}, Door Location: ${doorLocation}, Door Status: ${doorStatus}, Door Material: ${doorMaterial}, Treasure: ${treasure}, Treasure Trap: ${treasureTrap}`;
 
         // Insert the log entry at the beginning of the room log
         roomLog.insertBefore(logEntry, roomLog.firstChild);
@@ -163,6 +168,42 @@
                 return "Secret";
             default:
                 return "Error";
+        }
+    }
+
+    function generateCurve() {
+        const curveRoll = rollDice(6);
+        switch(curveRoll) {
+            case 1:
+                return "Left";
+            case 6:
+                return "Right";
+            default:
+                return "Straight";
+        }
+    }
+
+    function generateSlope() {
+        const slopeRoll = rollDice(6);
+        switch(slopeRoll) {
+            case 1:
+                return "Upward";
+            case 6:
+                return "Downward";
+            default:
+                return "Even";
+        }
+    }
+
+    function generateWidth() {
+        const widthRoll = rollDice(6);
+        switch(widthRoll) {
+            case 1:
+                return "Narrowing";
+            case 6:
+                return "Widening";
+            default:
+                return "Same";
         }
     }
 
@@ -284,42 +325,6 @@
             }
         }
         return "N/A";
-    }
-
-    function generateCurve() {
-        const curveRoll = rollDice(6);
-        switch(curveRoll) {
-            case 1:
-                return "Left";
-            case 6:
-                return "Right";
-            default:
-                return "Straight";
-        }
-    }
-
-    function generateSlope() {
-        const slopeRoll = rollDice(6);
-        switch(slopeRoll) {
-            case 1:
-                return "Upward";
-            case 6:
-                return "Downward";
-            default:
-                return "Even";
-        }
-    }
-
-    function generateWidth() {
-        const widthRoll = rollDice(6);
-        switch(widthRoll) {
-            case 1:
-                return "Narrowing";
-            case 6:
-                return "Widening";
-            default:
-                return "Same";
-        }
     }
 
     function clearRoomLog() {
